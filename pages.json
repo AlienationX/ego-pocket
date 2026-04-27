@@ -1,49 +1,35 @@
 {
 	"pages": [
 		{
-			"path": "pages/catch/index",
+			"path": "pages/home/index",
 			"style": {
-				"navigationBarTitleText": "Ego Pocket"
+				"navigationStyle": "custom"
 			}
 		},
 		{
 			"path": "pages/pokedex/index",
 			"style": {
-				"navigationBarTitleText": "图鉴"
+				"navigationStyle": "custom"
 			}
 		},
 		{
 			"path": "pages/profile/index",
 			"style": {
-				"navigationBarTitleText": "我的"
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/detail/index",
+			"style": {
+				"navigationStyle": "custom"
 			}
 		}
 	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "Ego Pocket",
-		"navigationBarBackgroundColor": "#F8F8F8",
-		"backgroundColor": "#F8F8F8"
-	},
-	"tabBar": {
-		"color": "#999999",
-		"selectedColor": "#FF0000",
-		"backgroundColor": "#FFFFFF",
-		"borderStyle": "black",
-		"list": [
-			{
-				"pagePath": "pages/catch/index",
-				"text": "捕捉"
-			},
-			{
-				"pagePath": "pages/pokedex/index",
-				"text": "图鉴"
-			},
-			{
-				"pagePath": "pages/profile/index",
-				"text": "我的"
-			}
-		]
+		"navigationBarBackgroundColor": "#F5F6F8",
+		"backgroundColor": "#F5F6F8"
 	},
 	"uniIdRouter": {}
 }

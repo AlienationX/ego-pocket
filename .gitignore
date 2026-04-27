@@ -3,4 +3,6 @@ unpackage/
 .hbuilderx/
 .DS_Store
 
+ego-pocket.code-workspace
+
 ui/

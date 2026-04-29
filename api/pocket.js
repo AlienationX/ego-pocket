@@ -39,8 +39,8 @@ export const getPokedex = () => {
   return request({ url: '/pokedex/' })
 }
 
-export const getPlayerPokemon = (page = 1, search = '') => {
-  return request({ url: `/user-pokemon/?page=${page}&search=${search}` })
+export const getPlayerPokemon = (page = 1, search = '', type = '', habitat = '') => {
+  return request({ url: `/user-pokemon/?page=${page}&search=${search}&type=${type}&habitat=${habitat}` })
 }
 
 export const encounterPokemon = () => {
@@ -51,10 +51,18 @@ export const catchPokemon = (pokemon_id, use_berry = false, weather = '', nickna
   return request({ url: '/catch/', method: 'POST', data: { pokemon_id, use_berry, weather, nickname } })
 }
 
-export const getAllPokemon = (page = 1, search = '') => {
-  return request({ url: `/pokemon/?page=${page}&search=${search}` })
+export const getAllPokemon = (page = 1, search = '', type = '', habitat = '') => {
+  return request({ url: `/pokemon/?page=${page}&search=${search}&type=${type}&habitat=${habitat}` })
 }
 
 export const getPokemonDetail = (id) => {
   return request({ url: `/pokemon/${id}/` })
+}
+
+export const updatePlayerPokemon = (id, data) => {
+  return request({ url: `/user-pokemon/${id}/`, method: 'PATCH', data })
+}
+
+export const getMetadata = () => {
+  return request({ url: '/pokemon/metadata/' })
 }

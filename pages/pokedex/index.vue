@@ -8,8 +8,41 @@
     <view class="search-bar">
       <view class="search-inner">
         <text class="search-icon">🔍</text>
-        <input class="search-input" v-model="searchText" placeholder="Search by name, #id or nickname" @input="onSearch" />
+        <input class="search-input" v-model="searchText" placeholder="Search by name, #id or nickname"
+          @input="onSearch" />
+        <view class="filter-toggle" :class="{ active: showFilters }" @click="showFilters = !showFilters">
+          <text class="toggle-icon">Filter</text>
+        </view>
       </view>
+    </view>
+
+    <!-- Filters -->
+    <view class="filter-section" v-show="showFilters">
+      <scroll-view scroll-x class="filter-scroll">
+        <view class="chip-group">
+          <view class="filter-chip" :class="{ active: !searchStore.filterType }" @click="toggleTypeFilter('')">
+            <text>All</text>
+          </view>
+          <TypeTag v-for="t in searchStore.availableTypes" :key="t.name" 
+            :typeName="t.name" :typeZh="t.name_zh"
+            :class="{ active: searchStore.filterType === t.name_zh }"
+            size="small"
+            @click="toggleTypeFilter(t.name_zh)" />
+        </view>
+      </scroll-view>
+
+      <scroll-view scroll-x class="filter-scroll">
+        <view class="chip-group">
+          <view class="filter-chip habitat" :class="{ active: !searchStore.filterHabitat }" @click="toggleHabitatFilter('')">
+            <text>All Habitats</text>
+          </view>
+          <view class="filter-chip habitat" v-for="h in searchStore.availableHabitats" :key="h.name"
+            :class="{ active: searchStore.filterHabitat === h.name_zh }"
+            @click="toggleHabitatFilter(h.name_zh)">
+            <text>{{ h.name_zh }}</text>
+          </view>
+        </view>
+      </scroll-view>
     </view>
 
     <!-- Empty State -->
@@ -26,23 +59,25 @@
 
     <!-- List State -->
     <scroll-view v-if="pokedex.length > 0 || loading" scroll-y class="scroll-area" @scrolltolower="loadMore">
-      <view class="pokemon-grid">
+      <Loading :show="loading" :fullscreen="false" text="Syncing Pokedex..." />
+      
+      <view class="pokemon-grid" v-if="!loading">
         <view class="pokemon-card" v-for="item in pokedex" :key="item.id" @click="goToDetail(item)">
-          <image class="pokemon-img"
-            :src="item.pokemon_image"
-            mode="aspectFit" lazy-load />
+          <image class="pokemon-img" :src="item.pokemon_image" mode="aspectFit" lazy-load />
           <text class="pokemon-nickname">{{ item.nickname || item.pokemon_name_zh }}</text>
           <text class="pokemon-original">#{{ item.pokemon_index }} • {{ item.pokemon_name_en }}</text>
         </view>
       </view>
       <view class="load-more" v-if="loadingMore">
-        <text>Loading...</text>
+        <Loading :show="true" :fullscreen="false" size="small" text="Syncing more..." />
       </view>
       <view class="load-more" v-if="!hasMore && pokedex.length > 0">
         <text>No more Pokemon</text>
       </view>
+      <view class="bottom-spacer" />
     </scroll-view>
 
+    <!-- TabBar 固定在底部 -->
     <CustomTabBar current="pokedex" />
   </view>
 </template>
@@ -51,9 +86,15 @@
 import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import CustomTabBar from '@/components/CustomTabBar.vue'
-import { getPlayerPokemon } from '@/api/pocket'
+import Loading from '@/components/Loading.vue'
+import TypeTag from '@/components/TypeTag.vue'
+import { getPlayerPokemon, getMetadata } from '@/api/pocket'
+import { useSearchStore } from '@/store/search'
+
+const searchStore = useSearchStore()
 
 const statusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight || 20)
+const showFilters = ref(false)
 
 const pokedex = ref([])
 const loading = ref(false)
@@ -67,7 +108,7 @@ const loadPokedex = async (page = 1) => {
   if (page === 1) loading.value = true
   loadingMore.value = true
   try {
-    const res = await getPlayerPokemon(page, searchText.value)
+    const res = await getPlayerPokemon(page, searchText.value, searchStore.filterType, searchStore.filterHabitat)
     // DRF paginated: { count, next, previous, results }
     if (page === 1) {
       pokedex.value = res.results || res
@@ -98,20 +139,36 @@ const onSearch = () => {
   }, 500)
 }
 
-const goToDetail = (item) => {
-  // Navigate to the pokemon detail page using the pokemon's model ID
-  if (item.pokemon_id) {
-    uni.navigateTo({ url: `/pages/detail/index?id=${item.pokemon_id}` })
-  } else if (item.pokemon) {
-    uni.navigateTo({ url: `/pages/detail/index?id=${item.pokemon}` })
-  }
+const toggleTypeFilter = (name) => {
+  searchStore.setFilterType(name)
+  currentPage.value = 1
+  loadPokedex(1)
 }
 
-onShow(() => {
+const toggleHabitatFilter = (name) => {
+  searchStore.setFilterHabitat(name)
+  currentPage.value = 1
+  loadPokedex(1)
+}
+
+onShow(async () => {
+  if (searchStore.availableTypes.length === 0) {
+    try {
+      const meta = await getMetadata()
+      searchStore.setMetadata(meta.types, meta.habitats)
+    } catch (err) {}
+  }
   currentPage.value = 1
   hasMore.value = true
   loadPokedex(1)
 })
+
+const goToDetail = (item) => {
+  // Navigate to the pokemon detail page using the pokemon's model ID
+  if (item.pokemon_index) {
+    uni.navigateTo({ url: `/pages/detail/index?id=${item.pokemon_index}` })
+  }
+}
 </script>
 
 <style lang="scss" scoped>
@@ -150,8 +207,28 @@ onShow(() => {
   align-items: center;
   background-color: rgba(255, 255, 255, 0.8);
   border-radius: 15px;
-  padding: 8px 15px;
+  padding: 6px 15px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.filter-toggle {
+  padding: 4px 8px;
+  margin-left: 10px;
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.05);
+  transition: all 0.2s;
+
+  &.active {
+    background-color: $color-primary;
+    .toggle-icon { color: white; }
+  }
+}
+
+.toggle-icon {
+  font-size: 11px;
+  font-weight: bold;
+  color: $color-text-secondary;
+  text-transform: uppercase;
 }
 
 .search-icon {
@@ -238,8 +315,8 @@ onShow(() => {
 }
 
 .pokemon-img {
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
   margin-bottom: 10px;
 }
 
@@ -252,8 +329,46 @@ onShow(() => {
 }
 
 .pokemon-original {
+  font-size: 11px;
+  color: $color-text-secondary;
+}
+
+.filter-section {
+  padding: 0 20px;
+  margin-bottom: 10px;
+}
+
+.filter-scroll {
+  white-space: nowrap;
+}
+
+.chip-group {
+  display: flex;
+  gap: 10px;
+}
+
+.filter-chip {
+  padding: 4px 12px;
+  background-color: white;
+  border-radius: 8px;
   font-size: 12px;
   color: $color-text-secondary;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+
+  &.active {
+    background-color: $color-primary;
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 4px 8px rgba($color-primary, 0.2);
+  }
+
+  &.habitat {
+    &.active {
+      background-color: $color-secondary;
+      box-shadow: 0 4px 10px rgba($color-secondary, 0.2);
+    }
+  }
 }
 
 .load-more {
@@ -264,5 +379,8 @@ onShow(() => {
     font-size: 13px;
     color: $color-text-light;
   }
+}
+.bottom-spacer {
+  height: 100px;
 }
 </style>

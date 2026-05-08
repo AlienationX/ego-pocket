@@ -1,6 +1,6 @@
 <template>
   <view class="detail-container">
-    <CustomNavBar title="Pokemon Detail" :showBack="true" />
+    <CustomNavBar :title="pokemon ? pokemon.name_zh : 'Loading...'" :showBack="true" />
 
     <view class="content" :style="{ paddingTop: statusBarHeight + 44 + 'px' }" v-if="pokemon">
       <!-- Top Info -->
@@ -8,14 +8,13 @@
         <text class="pokemon-name">{{ pokemon.name_zh }}</text>
         <view class="title-row">
           <view class="types">
-            <TypeTag v-for="t in pokemon.types_detail" :key="t.id" 
-              :typeName="t.name" :typeZh="t.name_zh" 
-              size="large" @click="showTypeEffectiveness(t)" />
+            <TypeTag v-for="t in pokemon.types_detail" :key="t.id" :typeName="t.name" :typeZh="t.name_zh" size="large"
+              @click="showTypeEffectiveness(t)" />
           </view>
           <text class="pokemon-id">#{{ pokemon.index }}</text>
         </view>
-        <view class="bonus-tag" v-if="searchStore.getCaptureBonus(pokemon) > 0">
-          <text>✨ 环境加成: 捕获率 +{{ searchStore.getCaptureBonus(pokemon) }}%</text>
+        <view class="bonus-tag" v-if="exploreStore.getCaptureBonus(pokemon) > 0">
+          <text>✨ 环境加成: 捕获率 +{{ exploreStore.getCaptureBonus(pokemon) }}%</text>
         </view>
       </view>
 
@@ -61,12 +60,13 @@
           </view>
           <view class="info-row" v-if="pokemon.habitat_name_zh">
             <text class="label">栖息地</text>
-            <text class="value link" @click="handleHabitatClick(pokemon.habitat_name_zh)">{{ pokemon.habitat_name_zh }}</text>
+            <text class="value link" @click="handleHabitatClick(pokemon.habitat_name_zh)">{{ pokemon.habitat_name_zh
+              }}</text>
           </view>
           <view class="info-row">
             <text class="label">性别比</text>
             <text class="value">{{ pokemon.gender_ratio === -1 ? '无性别' : (pokemon.gender_ratio / 8 * 100) + '% 雌性'
-              }}</text>
+            }}</text>
           </view>
           <view class="info-row">
             <text class="label">基础经验</text>
@@ -129,44 +129,6 @@
           </view>
         </view>
       </view>
-
-      <!-- Pokeball Catch Button -->
-      <view class="catch-btn-container">
-        <view class="catch-btn" @click="tryCatch" :class="{ 'catching': catching }">
-          <view class="pokeball-top"></view>
-          <view class="pokeball-bottom"></view>
-          <view class="pokeball-center"></view>
-        </view>
-      </view>
-    </view>
-
-    <!-- Success Modal -->
-    <view class="modal-overlay" v-if="catchSuccess">
-      <view class="modal-card success-card animated-pop">
-        <image class="close-icon" src="/static/icons/close-circle.svg" @click="catchSuccess = false" />
-        <view class="success-glow"></view>
-        <view class="confetti-icon">✨</view>
-        <image class="modal-img" :src="pokemon.image" mode="aspectFit" />
-        <text class="modal-title success-text">Gotcha!</text>
-        <text class="modal-desc">{{ pokemon.name_zh }} was caught</text>
-
-        <view class="input-section">
-          <text class="input-label">Give a name for your pokemon</text>
-          <input class="name-input" v-model="nickname" :placeholder="pokemon.name_zh" />
-        </view>
-
-        <button class="btn-primary success-btn" @click="confirmCatch">Register to Pokedex</button>
-      </view>
-    </view>
-
-    <!-- Fail Modal -->
-    <view class="modal-overlay" v-if="catchFail">
-      <view class="modal-card fail-card animated-shake">
-        <view class="fail-icon">💨</view>
-        <text class="modal-title fail-text">Oh no!!!</text>
-        <text class="modal-desc">{{ pokemon.name_zh }} has run away</text>
-        <button class="btn-primary fail-btn" @click="catchFail = false">Close</button>
-      </view>
     </view>
 
     <!-- Type Effectiveness Modal -->
@@ -179,26 +141,29 @@
           </view>
           <text class="close-modal" @click="showEffectModal = false">✕</text>
         </view>
-        
+
         <scroll-view scroll-y class="modal-body">
           <view class="effect-group" v-if="effectivenessData.strong.length">
             <text class="group-title strong">极佳 (x2)</text>
             <view class="type-grid">
-              <TypeTag v-for="t in effectivenessData.strong" :key="t.name" :typeName="t.name" :typeZh="t.zh" size="small" />
+              <TypeTag v-for="t in effectivenessData.strong" :key="t.name" :typeName="t.name" :typeZh="t.zh"
+                size="small" />
             </view>
           </view>
-          
+
           <view class="effect-group" v-if="effectivenessData.weak.length">
             <text class="group-title weak">较差 (x0.5)</text>
             <view class="type-grid">
-              <TypeTag v-for="t in effectivenessData.weak" :key="t.name" :typeName="t.name" :typeZh="t.zh" size="small" />
+              <TypeTag v-for="t in effectivenessData.weak" :key="t.name" :typeName="t.name" :typeZh="t.zh"
+                size="small" />
             </view>
           </view>
-          
+
           <view class="effect-group" v-if="effectivenessData.none.length">
             <text class="group-title none">无效 (x0)</text>
             <view class="type-grid">
-              <TypeTag v-for="t in effectivenessData.none" :key="t.name" :typeName="t.name" :typeZh="t.zh" size="small" />
+              <TypeTag v-for="t in effectivenessData.none" :key="t.name" :typeName="t.name" :typeZh="t.zh"
+                size="small" />
             </view>
           </view>
 
@@ -217,38 +182,35 @@ import { onLoad } from '@dcloudio/uni-app'
 import CustomNavBar from '@/components/CustomNavBar.vue'
 import TypeTag from '@/components/TypeTag.vue'
 import { getPokemonDetail, catchPokemon, updatePlayerPokemon } from '@/api/pocket'
-import { useSearchStore } from '@/store/search'
+import { usePokemonStore } from '@/store/pokemon'
+import { useExploreStore } from '@/store/explore'
 
-const searchStore = useSearchStore()
+const pokemonStore = usePokemonStore()
+const exploreStore = useExploreStore()
 
 const statusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight || 20)
 const pokemon = ref(null)
-const catching = ref(false)
-const catchSuccess = ref(false)
-const catchFail = ref(false)
 const loading = ref(false)
 const activeTab = ref('about')
-const nickname = ref('')
-const lastCaughtId = ref(null)
 
 // Effectiveness Modal
 const showEffectModal = ref(false)
 const selectedType = ref(null)
 const effectivenessData = computed(() => {
   if (!selectedType.value) return { strong: [], weak: [], none: [] }
-  
+
   const eff = selectedType.value.effectiveness || {}
   const strong = [], weak = [], none = []
-  
+
   for (const [tName, multiplier] of Object.entries(eff)) {
-    const tInfo = searchStore.availableTypes.find(t => t.name_en.toLowerCase() === tName.toLowerCase()) || { name: tName.toLowerCase(), zh: tName }
+    const tInfo = pokemonStore.availableTypes.find(t => t.name_en.toLowerCase() === tName.toLowerCase()) || { name: tName.toLowerCase(), zh: tName }
     const data = { name: tInfo.name, zh: tInfo.name_zh || tName }
-    
+
     if (multiplier === 2) strong.push(data)
     else if (multiplier === 0.5) weak.push(data)
     else if (multiplier === 0) none.push(data)
   }
-  
+
   return { strong, weak, none }
 })
 
@@ -283,7 +245,7 @@ const goToPokemonById = (id) => {
 
 const showTypeEffectiveness = (type) => {
   // Find full type info from store (including effectiveness and other names)
-  const fullType = searchStore.availableTypes.find(t => t.name_zh === type.name_zh)
+  const fullType = pokemonStore.availableTypes.find(t => t.name_zh === type.name_zh)
   if (fullType) {
     selectedType.value = fullType
     showEffectModal.value = true
@@ -292,15 +254,14 @@ const showTypeEffectiveness = (type) => {
 
 const handleTypeSearch = () => {
   if (selectedType.value) {
-    searchStore.setFilterType(selectedType.value.name_zh)
-    searchStore.filterHabitat = ''
+    pokemonStore.setFilterType(selectedType.value.name_zh)
     uni.switchTab({ url: '/pages/home/index' })
   }
 }
 
 const handleHabitatClick = (name) => {
-  searchStore.setFilterHabitat(name)
-  searchStore.filterType = '' // Clear type filter for clarity
+  pokemonStore.setFilterHabitat(name)
+  pokemonStore.filterType = '' // Clear type filter for clarity
   uni.switchTab({ url: '/pages/home/index' })
 }
 
@@ -345,40 +306,6 @@ onLoad(async (options) => {
     }
   }
 })
-
-const tryCatch = async () => {
-  if (catching.value) return
-  catching.value = true
-
-  try {
-    const res = await catchPokemon(pokemon.value.id)
-    if (res.success) {
-      catchSuccess.value = true
-      lastCaughtId.value = res.data.id
-      nickname.value = pokemon.value.name_zh
-    } else {
-      catchFail.value = true
-    }
-  } catch (err) {
-    if (err.data && err.data.error) {
-      uni.showToast({ title: err.data.error, icon: 'none' })
-    }
-  } finally {
-    catching.value = false
-  }
-}
-
-const confirmCatch = async () => {
-  if (nickname.value && lastCaughtId.value) {
-    try {
-      await updatePlayerPokemon(lastCaughtId.value, { nickname: nickname.value })
-    } catch (err) {
-      console.error('Failed to update nickname', err)
-    }
-  }
-  catchSuccess.value = false
-  uni.switchTab({ url: '/pages/home/index' })
-}
 </script>
 
 <style lang="scss" scoped>
@@ -427,9 +354,9 @@ const confirmCatch = async () => {
 }
 
 .pokemon-id {
-  font-size: 18px;
-  font-weight: 800;
-  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  color: #A3AAB9;
   opacity: 0.8;
 }
 
@@ -439,6 +366,7 @@ const confirmCatch = async () => {
   padding: 4px 10px;
   border-radius: 8px;
   align-self: flex-start;
+
   text {
     font-size: 12px;
     color: white;
@@ -512,7 +440,7 @@ const confirmCatch = async () => {
   font-size: 14px;
   color: $color-text-primary;
   font-weight: 500;
-  
+
   &.link {
     color: $color-primary;
     text-decoration: underline;
@@ -674,7 +602,7 @@ const confirmCatch = async () => {
   background-color: rgba($color-primary, 0.08);
   padding: 2px 8px;
   border-radius: 10px;
-  
+
   text {
     font-size: 10px;
     color: $color-primary;
@@ -700,6 +628,17 @@ const confirmCatch = async () => {
   flex-direction: column;
   align-items: center;
   padding: 15px 0;
+}
+
+/* Type Effectiveness Modal Style */
+.effect-modal {
+  background: white;
+  width: 80%;
+  border-radius: 30px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  max-height: 70vh;
 }
 
 .arrow-icon {

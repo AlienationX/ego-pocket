@@ -1,88 +1,79 @@
 <template>
-  <view class="profile-page">
-    <!-- 顶部渐变背景区域 -->
-    <view class="hero-section" :style="{ paddingTop: statusBarHeight + 'px' }">
-      <image class="hero-bg" src="/static/pokmon-banner.svg" mode="aspectFill" />
-      <view class="hero-overlay" />
-      <view class="hero-content">
-        <text class="page-title">个人中心</text>
-        <view class="avatar-card" v-if="stats">
-          <view class="avatar-ring">
-            <image class="avatar-img" src="/static/icons/ball.svg" mode="aspectFit" />
-          </view>
-          <view class="user-info">
-            <text class="username">{{ stats.player.username }}</text>
-            <view class="level-badge">
-              <text class="level-text">Lv. 1</text>
-              <text class="level-title">新手训练师</text>
-            </view>
-          </view>
+  <view class="custom-container">
+    <view class="header" :style="{ paddingTop: statusBarHeight + 'px' }">
+      <text class="greeting">训练师中心</text>
+      <text class="subtitle">Manage your trainer profile.</text>
+    </view>
+
+    <!-- 个人信息区 -->
+    <view class="profile-card" v-if="stats">
+      <view class="profile-row">
+        <view class="avatar-wrap">
+          <image class="avatar-img" src="/static/inset/ball.svg" mode="aspectFit" />
+        </view>
+        <view class="profile-info">
+          <text class="profile-name">{{ stats.player.username }}</text>
+          <text class="profile-role">Lv.1 · 新手训练师</text>
         </view>
       </view>
     </view>
 
-    <view class="content-wrapper">
+    <scroll-view scroll-y class="scroll-area">
       <!-- 图鉴进度 -->
-      <view class="section glass-section" v-if="stats">
-        <view class="progress-card">
-          <view class="progress-header">
-            <text class="progress-title">图鉴完成度</text>
-            <view class="progress-percent-badge">
-              <text class="progress-percent">{{ stats.pokedex_progress }}%</text>
+      <view class="section" v-if="stats">
+        <view class="section-header">
+          <text class="section-title">图鉴进度</text>
+          <view class="percent-badge">
+            <text>{{ stats.pokedex_progress }}%</text>
+          </view>
+        </view>
+        <view class="stat-card">
+          <view class="progress-bar-wrap">
+            <view class="progress-bar-bg">
+              <view class="progress-bar-fill" :style="{ width: stats.pokedex_progress + '%' }" />
             </view>
           </view>
-          <view class="progress-bar-bg">
-            <view class="progress-bar-fill" :style="{ width: stats.pokedex_progress + '%' }">
-              <view class="progress-bar-glow"></view>
+          <view class="stat-row">
+            <view class="stat-item">
+              <text class="stat-num">{{ stats.caught_count }}</text>
+              <text class="stat-label">已捕获</text>
             </view>
-          </view>
-          <view class="progress-stats">
-            <view class="progress-stat">
-              <text class="progress-stat-num text-gradient-1">{{ stats.caught_count }}</text>
-              <text class="progress-stat-label">已捕获</text>
+            <view class="stat-item">
+              <text class="stat-num">{{ stats.seen_count }}</text>
+              <text class="stat-label">已发现</text>
             </view>
-            <view class="progress-stat">
-              <text class="progress-stat-num text-gradient-2">{{ stats.seen_count }}</text>
-              <text class="progress-stat-label">已发现</text>
+            <view class="stat-item">
+              <text class="stat-num">{{ stats.total_pokemon }}</text>
+              <text class="stat-label">总数</text>
             </view>
-            <view class="progress-stat">
-              <text class="progress-stat-num">{{ stats.total_pokemon }}</text>
-              <text class="progress-stat-label">总数</text>
-            </view>
-            <view class="progress-stat">
-              <text class="progress-stat-num">{{ stats.owned_total }}</text>
-              <text class="progress-stat-label">持有数</text>
+            <view class="stat-item">
+              <text class="stat-num">{{ stats.owned_total }}</text>
+              <text class="stat-label">持有</text>
             </view>
           </view>
         </view>
       </view>
 
-      <!-- 背包道具 -->
+      <!-- 背包 -->
       <view class="section" v-if="stats">
         <view class="section-header">
           <text class="section-title">我的背包</text>
         </view>
-        <view class="item-grid">
-          <view class="item-card glass-card">
-            <view class="item-icon-wrap coins-bg">
-              <text class="item-icon-emoji">🪙</text>
-            </view>
-            <text class="item-name">金币</text>
-            <text class="item-count">{{ stats.player.coins }}</text>
+        <view class="bag-grid">
+          <view class="bag-card">
+            <text class="bag-icon">🪙</text>
+            <text class="bag-count">{{ stats.player.coins }}</text>
+            <text class="bag-label">金币</text>
           </view>
-          <view class="item-card glass-card">
-            <view class="item-icon-wrap balls-bg">
-              <image class="item-icon-img" src="/static/icons/ball.svg" mode="aspectFit" />
-            </view>
-            <text class="item-name">精灵球</text>
-            <text class="item-count">{{ stats.player.pokeballs }}</text>
+          <view class="bag-card">
+            <image class="bag-ball-img" src="/static/inset/ball.svg" mode="aspectFit" />
+            <text class="bag-count">{{ stats.player.pokeballs }}</text>
+            <text class="bag-label">精灵球</text>
           </view>
-          <view class="item-card glass-card">
-            <view class="item-icon-wrap berries-bg">
-              <text class="item-icon-emoji">🍇</text>
-            </view>
-            <text class="item-name">树果</text>
-            <text class="item-count">{{ stats.player.berries }}</text>
+          <view class="bag-card">
+            <text class="bag-icon">🍇</text>
+            <text class="bag-count">{{ stats.player.berries }}</text>
+            <text class="bag-label">树果</text>
           </view>
         </view>
       </view>
@@ -92,34 +83,32 @@
         <view class="section-header">
           <text class="section-title">道具商店</text>
         </view>
-        <view class="shop-list">
-          <view class="shop-item glass-card" @click="buyMorePokeballs" :class="{ disabled: buying }">
-            <view class="shop-item-left">
-              <view class="shop-icon-wrap balls-bg">
-                <image class="shop-icon-img" src="/static/icons/ball.svg" mode="aspectFit" />
-              </view>
-              <view class="shop-item-info">
-                <text class="shop-item-name">精灵球 × 10</text>
-                <text class="shop-item-desc">捕捉宝可梦的基础道具</text>
-              </view>
+        <view class="shop-card" @click="buyMorePokeballs" :class="{ disabled: buying }">
+          <view class="shop-left">
+            <view class="shop-icon balls-bg">
+              <image class="shop-icon-img" src="/static/inset/ball.svg" mode="aspectFit" />
             </view>
-            <view class="shop-price-btn">
-              <text class="shop-price">🪙 100</text>
+            <view class="shop-info">
+              <text class="shop-name">精灵球 × 10</text>
+              <text class="shop-desc">捕捉宝可梦的基础道具</text>
             </view>
           </view>
-          <view class="shop-item glass-card" @click="buyMoreBerries" :class="{ disabled: buying }">
-            <view class="shop-item-left">
-              <view class="shop-icon-wrap berries-bg">
-                <text class="shop-icon-emoji">🍇</text>
-              </view>
-              <view class="shop-item-info">
-                <text class="shop-item-name">树果 × 2</text>
-                <text class="shop-item-desc">提升捕获概率 +20%</text>
-              </view>
+          <view class="shop-price-btn">
+            <text class="shop-price">🪙 100</text>
+          </view>
+        </view>
+        <view class="shop-card" @click="buyMoreBerries" :class="{ disabled: buying }">
+          <view class="shop-left">
+            <view class="shop-icon berries-bg">
+              <text class="shop-icon-emoji">🍇</text>
             </view>
-            <view class="shop-price-btn">
-              <text class="shop-price">🪙 10</text>
+            <view class="shop-info">
+              <text class="shop-name">树果 × 2</text>
+              <text class="shop-desc">提升捕获概率 +20%</text>
             </view>
+          </view>
+          <view class="shop-price-btn">
+            <text class="shop-price">🪙 10</text>
           </view>
         </view>
       </view>
@@ -131,31 +120,45 @@
         </view>
         <scroll-view scroll-x class="recent-scroll" :show-scrollbar="false">
           <view class="recent-list">
-            <view class="recent-card glass-card" v-for="item in stats.recent_catches" :key="item.id"
+            <view class="recent-card" v-for="item in stats.recent_catches" :key="item.id"
               @click="goToDetail(item.pokemon_index)">
-              <view class="recent-img-bg">
-                <image class="recent-img" :src="item.pokemon_image" mode="aspectFit" />
-              </view>
+              <image class="recent-img" :src="item.pokemon_image" mode="aspectFit" />
               <text class="recent-name">{{ item.nickname || item.pokemon_name_zh }}</text>
-              <text class="recent-iv">IV {{ item.iv }}</text>
+              <view class="iv-badge">
+                <text>IV {{ item.iv }}</text>
+              </view>
             </view>
           </view>
         </scroll-view>
       </view>
 
+      <!-- 设置 -->
+      <view class="section">
+        <view class="section-header">
+          <text class="section-title">设置</text>
+        </view>
+        <view class="menu-card" @click="handleLogout">
+          <text class="menu-text danger-text">退出登录</text>
+          <text class="menu-arrow">›</text>
+        </view>
+      </view>
+
       <view class="bottom-spacer" />
-    </view>
-    
+    </scroll-view>
+
     <CustomTabBar current="profile" />
   </view>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { onShow } from '@dcloudio/uni-app'
+import { ref, nextTick } from 'vue'
+import { onShow, onHide } from '@dcloudio/uni-app'
 import CustomNavBar from '@/components/CustomNavBar.vue'
 import CustomTabBar from '@/components/CustomTabBar.vue'
 import { getPlayerInfo, getPlayerStats, buyPokeballs, buyBerries } from '@/api/pocket'
+import { useUserStore } from '@/store/user'
+
+const userStore = useUserStore()
 
 const statusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight || 20)
 const player = ref(null)
@@ -168,6 +171,9 @@ const loadData = async () => {
   try {
     player.value = await getPlayerInfo()
     stats.value = await getPlayerStats()
+    // Update cache
+    userStore.setCachedPlayerInfo(player.value)
+    userStore.setCachedPlayerStats(stats.value)
   } catch (err) {
     console.error(err)
   } finally {
@@ -207,356 +213,256 @@ const goToDetail = (pokemonIndex) => {
   uni.navigateTo({ url: `/pages/detail/index?id=${pokemonIndex}` })
 }
 
+const handleLogout = () => {
+  uni.showModal({
+    title: '提示',
+    content: '确定要退出登录吗？',
+    success: (res) => {
+      if (res.confirm) {
+        uni.removeStorageSync('token')
+        uni.reLaunch({ url: '/pages/home/index' })
+      }
+    }
+  })
+}
+
 onShow(() => {
-  loadData()
+  // Use cache if available
+  if (userStore.cachedPlayerInfo && userStore.cachedPlayerStats) {
+    player.value = userStore.cachedPlayerInfo
+    stats.value = userStore.cachedPlayerStats
+  } else {
+    loadData()
+  }
 })
 </script>
 
 <style lang="scss" scoped>
-.profile-page {
-  min-height: 100vh;
-  background-color: #F4F6FA;
-  position: relative;
-  overflow-x: hidden;
-}
-
-/* ===== Hero ===== */
-.hero-section {
-  position: relative;
+.custom-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  box-sizing: border-box;
   overflow: hidden;
-  padding-bottom: 40px;
-  background: linear-gradient(135deg, #2A365C 0%, #171E36 100%);
-  border-bottom-left-radius: 40px;
-  border-bottom-right-radius: 40px;
-  box-shadow: 0 10px 30px rgba(23, 30, 54, 0.15);
+  background-color: $color-bg;
 }
 
-.hero-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  opacity: 0.4;
-  mix-blend-mode: overlay;
+.header {
+  padding: 20px 20px 10px;
+  display: flex;
+  flex-direction: column;
 }
 
-.hero-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(180deg, rgba(23, 30, 54, 0.2) 0%, rgba(23, 30, 54, 0.9) 100%);
-  z-index: 1;
-}
-
-.hero-content {
-  position: relative;
-  z-index: 2;
-  padding: 20px 24px;
-}
-
-.page-title {
+.greeting {
   font-size: 28px;
   font-weight: 800;
-  color: #FFFFFF;
-  margin-bottom: 24px;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-  letter-spacing: 0.5px;
+  color: $color-text-primary;
+  margin-bottom: 8px;
 }
 
-/* ===== Avatar Card (Glassmorphism) ===== */
-.avatar-card {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 24px;
+.subtitle {
+  font-size: 14px;
+  color: $color-text-secondary;
+}
+
+/* ===== Profile Card ===== */
+.profile-card {
+  margin: 10px 20px 0;
+  background-color: $color-white;
+  border-radius: 20px;
   padding: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
 }
 
-.avatar-ring {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #FF6B6B, #FFD93D, #6C5CE7);
+.profile-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 4px;
+  gap: 16px;
+}
+
+.avatar-wrap {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $color-primary, $color-secondary);
+  padding: 3px;
   flex-shrink: 0;
-  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
 }
 
 .avatar-img {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: #FFFFFF;
-  border: 2px solid #FFFFFF;
+  background-color: $color-white;
 }
 
-.user-info {
+.profile-info {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
-.username {
-  font-size: 24px;
+.profile-name {
+  font-size: 20px;
   font-weight: 800;
-  color: #FFFFFF;
-  letter-spacing: 0.5px;
+  color: $color-text-primary;
 }
 
-.level-badge {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.15);
-  padding: 4px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.level-text {
+.profile-role {
   font-size: 13px;
-  font-weight: 800;
-  color: #FFD93D;
+  color: $color-text-secondary;
 }
 
-.level-title {
-  font-size: 12px;
-  color: #E2E8F0;
-  font-weight: 500;
+/* ===== Scroll Area ===== */
+.scroll-area {
+  flex: 1;
+  height: 0;
+  width: 100%;
 }
 
-/* ===== Content Wrapper ===== */
-.content-wrapper {
-  padding: 0 20px;
-  margin-top: -20px;
-  position: relative;
-  z-index: 10;
-}
-
-/* ===== General Section ===== */
+/* ===== Section ===== */
 .section {
-  margin-bottom: 24px;
+  padding: 15px 20px 0;
 }
 
 .section-header {
-  margin-bottom: 16px;
-  padding-left: 4px;
-}
-
-.section-title {
-  font-size: 19px;
-  font-weight: 800;
-  color: #1E293B;
-  letter-spacing: 0.5px;
-}
-
-/* ===== Glass Card Utility ===== */
-.glass-card {
-  background: #FFFFFF;
-  border-radius: 24px;
-  box-shadow: 0 8px 24px rgba(149, 157, 165, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-}
-
-/* ===== Progress Card ===== */
-.progress-card {
-  @extend .glass-card;
-  padding: 24px;
-}
-
-.progress-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
-.progress-title {
-  font-size: 17px;
+.section-title {
+  font-size: 18px;
   font-weight: 800;
-  color: #1E293B;
+  color: $color-text-primary;
 }
 
-.progress-percent-badge {
-  background: rgba(108, 92, 231, 0.1);
-  padding: 4px 12px;
-  border-radius: 12px;
+.percent-badge {
+  background-color: $color-primary;
+  padding: 3px 12px;
+  border-radius: 15px;
+
+  text {
+    color: $color-white;
+    font-size: 12px;
+    font-weight: bold;
+  }
 }
 
-.progress-percent {
-  font-size: 16px;
-  font-weight: 800;
-  color: #6C5CE7;
+/* ===== Stats Card ===== */
+.stat-card {
+  background-color: $color-white;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+}
+
+.progress-bar-wrap {
+  margin-bottom: 18px;
 }
 
 .progress-bar-bg {
   width: 100%;
-  height: 12px;
-  border-radius: 6px;
-  background: #E2E8F0;
-  position: relative;
+  height: 8px;
+  border-radius: 4px;
+  background-color: #ECEEF5;
   overflow: hidden;
-  margin-bottom: 24px;
 }
 
 .progress-bar-fill {
   height: 100%;
-  border-radius: 6px;
-  background: linear-gradient(90deg, #3ECDA8 0%, #6C5CE7 100%);
-  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
+  border-radius: 4px;
+  background: linear-gradient(90deg, $color-primary, $color-secondary);
+  transition: width 0.6s ease;
+  min-width: 2%;
 }
 
-.progress-bar-glow {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 20px;
-  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 100%);
-  filter: blur(2px);
-}
-
-.progress-stats {
+.stat-row {
   display: flex;
-  justify-content: space-between;
-  background: #F8FAFC;
-  padding: 16px;
-  border-radius: 16px;
+  justify-content: space-around;
 }
 
-.progress-stat {
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-num {
+  font-size: 20px;
+  font-weight: 800;
+  color: $color-text-primary;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: $color-text-secondary;
+}
+
+/* ===== Bag Grid ===== */
+.bag-grid {
+  display: flex;
+  gap: 12px;
+}
+
+.bag-card {
+  flex: 1;
+  background-color: $color-white;
+  border-radius: 20px;
+  padding: 16px 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  flex: 1;
-  position: relative;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
 }
 
-.progress-stat:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 10%;
-  height: 80%;
-  width: 1px;
-  background: #E2E8F0;
+.bag-icon {
+  font-size: 26px;
 }
 
-.progress-stat-num {
+.bag-ball-img {
+  width: 26px;
+  height: 26px;
+}
+
+.bag-count {
   font-size: 20px;
   font-weight: 800;
-  color: #1E293B;
+  color: $color-text-primary;
 }
 
-.text-gradient-1 {
-  background: linear-gradient(135deg, #FF6B6B, #FF8E53);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.text-gradient-2 {
-  background: linear-gradient(135deg, #6C5CE7, #8E7CFF);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.progress-stat-label {
+.bag-label {
   font-size: 12px;
-  color: #64748B;
-  font-weight: 600;
-}
-
-/* ===== Items Grid ===== */
-.item-grid {
-  display: flex;
-  gap: 16px;
-}
-
-.item-card {
-  flex: 1;
-  padding: 20px 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s;
-
-  &:active {
-    transform: scale(0.95);
-    box-shadow: 0 4px 12px rgba(149, 157, 165, 0.05);
-  }
-}
-
-.item-icon-wrap {
-  width: 56px;
-  height: 56px;
-  border-radius: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.06);
-}
-
-.coins-bg { background: linear-gradient(135deg, #FFEAA7, #FDCB6E); }
-.balls-bg { background: linear-gradient(135deg, #FFD0D0, #FF7675); }
-.berries-bg { background: linear-gradient(135deg, #C7ECEE, #7ED6DF); }
-
-.item-icon-emoji { font-size: 28px; }
-.item-icon-img { width: 34px; height: 34px; }
-
-.item-name {
-  font-size: 13px;
-  color: #64748B;
-  font-weight: 700;
-}
-
-.item-count {
-  font-size: 22px;
-  font-weight: 800;
-  color: #1E293B;
+  color: $color-text-secondary;
 }
 
 /* ===== Shop ===== */
-.shop-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.shop-item {
-  padding: 16px 20px;
+.shop-card {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  transition: transform 0.2s, opacity 0.2s;
+  background-color: $color-white;
+  border-radius: 20px;
+  padding: 16px;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
 
-  &:active { transform: scale(0.98); }
-  &.disabled { opacity: 0.5; filter: grayscale(50%); pointer-events: none; }
+  &:active { opacity: 0.7; }
+  &.disabled { opacity: 0.4; pointer-events: none; }
 }
 
-.shop-item-left {
+.shop-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
 
-.shop-icon-wrap {
-  width: 48px;
-  height: 48px;
+.shop-icon {
+  width: 42px;
+  height: 42px;
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -564,98 +470,121 @@ onShow(() => {
   flex-shrink: 0;
 }
 
-.shop-icon-img { width: 28px; height: 28px; }
-.shop-icon-emoji { font-size: 24px; }
+.balls-bg { background-color: #FFE0E0; }
+.berries-bg { background-color: #E0F4FF; }
 
-.shop-item-info {
+.shop-icon-img { width: 24px; height: 24px; }
+.shop-icon-emoji { font-size: 22px; }
+
+.shop-info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
-.shop-item-name {
-  font-size: 16px;
-  font-weight: 800;
-  color: #1E293B;
+.shop-name {
+  font-size: 15px;
+  font-weight: bold;
+  color: $color-text-primary;
 }
 
-.shop-item-desc {
-  font-size: 12px;
-  color: #64748B;
-  font-weight: 500;
+.shop-desc {
+  font-size: 11px;
+  color: $color-text-secondary;
 }
 
 .shop-price-btn {
-  background: linear-gradient(135deg, #FDCB6E 0%, #E1B12C 100%);
-  border-radius: 20px;
-  padding: 8px 16px;
-  box-shadow: 0 4px 12px rgba(225, 177, 44, 0.3);
+  background-color: $color-primary;
+  border-radius: 15px;
+  padding: 6px 14px;
 }
 
 .shop-price {
-  font-size: 15px;
-  font-weight: 800;
-  color: #2D3436;
+  font-size: 13px;
+  font-weight: bold;
+  color: $color-white;
 }
 
 /* ===== Recent Catches ===== */
 .recent-scroll {
   white-space: nowrap;
-  width: 100%;
 }
 
 .recent-list {
   display: flex;
-  gap: 16px;
-  padding: 4px 0 16px 4px;
+  gap: 12px;
+  padding-bottom: 4px;
 }
 
 .recent-card {
-  width: 130px;
-  padding: 16px;
+  width: 110px;
+  background-color: $color-white;
+  border-radius: 20px;
+  padding: 14px 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
   flex-shrink: 0;
-  transition: transform 0.2s;
 
-  &:active { transform: scale(0.96); }
+  &:active { opacity: 0.7; }
 }
 
-.recent-img-bg {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(108,92,231,0.1) 0%, rgba(255,255,255,0) 70%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.recent-img { width: 68px; height: 68px; }
+.recent-img { width: 56px; height: 56px; }
 
 .recent-name {
-  font-size: 14px;
-  font-weight: 800;
-  color: #1E293B;
+  font-size: 13px;
+  font-weight: bold;
+  color: $color-text-primary;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
+  max-width: 90px;
+  text-align: center;
 }
 
-.recent-iv {
-  font-size: 12px;
-  color: #3ECDA8;
-  font-weight: 800;
-  background: rgba(62, 205, 168, 0.15);
-  padding: 4px 12px;
-  border-radius: 12px;
-  letter-spacing: 0.5px;
+.iv-badge {
+  background-color: rgba($color-primary, 0.1);
+  padding: 2px 10px;
+  border-radius: 10px;
+
+  text {
+    font-size: 11px;
+    color: $color-primary;
+    font-weight: bold;
+  }
+}
+
+/* ===== Menu Card ===== */
+.menu-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: $color-white;
+  border-radius: 20px;
+  padding: 16px 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+
+  &:active { opacity: 0.7; }
+}
+
+.menu-text {
+  font-size: 15px;
+  font-weight: bold;
+  color: $color-text-primary;
+}
+
+.danger-text {
+  color: $color-danger;
+}
+
+.menu-arrow {
+  font-size: 20px;
+  color: $color-text-light;
 }
 
 .bottom-spacer {
-  height: 120px;
+  height: 100px;
 }
 </style>

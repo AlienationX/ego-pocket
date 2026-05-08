@@ -7,46 +7,56 @@
 
     <view class="search-bar">
       <view class="search-inner">
-        <text class="search-icon">🔍</text>
+        <image class="search-icon-svg" src="/static/icons/magnify.svg" mode="aspectFit" />
         <input class="search-input" v-model="searchText" placeholder="Search by name, #id or nickname"
           @input="onSearch" />
         <view class="filter-toggle" :class="{ active: showFilters }" @click="showFilters = !showFilters">
-          <text class="toggle-icon">Filter</text>
+          <text class="toggle-icon">{{ showFilters ? '✕' : '☰' }}</text>
         </view>
       </view>
     </view>
 
-    <!-- Filters -->
-    <view class="filter-section" v-show="showFilters">
-      <scroll-view scroll-x class="filter-scroll">
-        <view class="chip-group">
-          <view class="filter-chip" :class="{ active: !searchStore.filterType }" @click="toggleTypeFilter('')">
-            <text>All</text>
-          </view>
-          <TypeTag v-for="t in searchStore.availableTypes" :key="t.name" 
-            :typeName="t.name" :typeZh="t.name_zh"
-            :class="{ active: searchStore.filterType === t.name_zh }"
-            size="small"
-            @click="toggleTypeFilter(t.name_zh)" />
+    <!-- Filter Modal Bottom Sheet -->
+    <view class="filter-modal-overlay" v-if="showFilters" @click="showFilters = false">
+      <view class="filter-modal-content" @click.stop>
+        <view class="modal-header">
+          <text class="modal-title">Type</text>
+          <text class="modal-close" @click="showFilters = false">✖</text>
         </view>
-      </scroll-view>
-
-      <scroll-view scroll-x class="filter-scroll">
-        <view class="chip-group">
-          <view class="filter-chip habitat" :class="{ active: !searchStore.filterHabitat }" @click="toggleHabitatFilter('')">
-            <text>All Habitats</text>
+        <scroll-view scroll-y class="modal-body">
+          <view class="checkbox-grid">
+            <view class="checkbox-item" @click="toggleTypeFilter('')">
+              <view class="checkbox-box" :class="{ checked: !pokemonStore.filterType }"></view>
+              <text class="checkbox-label">All</text>
+            </view>
+            <view class="checkbox-item" v-for="t in pokemonStore.availableTypes" :key="t.name"
+              @click="toggleTypeFilter(t.name_zh)">
+              <view class="checkbox-box" :class="{ checked: pokemonStore.filterType === t.name_zh }"></view>
+              <text class="checkbox-label">{{ t.name_en || t.name }}</text>
+            </view>
           </view>
-          <view class="filter-chip habitat" v-for="h in searchStore.availableHabitats" :key="h.name"
-            :class="{ active: searchStore.filterHabitat === h.name_zh }"
-            @click="toggleHabitatFilter(h.name_zh)">
-            <text>{{ h.name_zh }}</text>
+          
+          <view class="modal-header" style="margin-top: 30px;">
+            <text class="modal-title">Habitat</text>
           </view>
-        </view>
-      </scroll-view>
+          <view class="checkbox-grid">
+            <view class="checkbox-item" @click="toggleHabitatFilter('')">
+              <view class="checkbox-box" :class="{ checked: !pokemonStore.filterHabitat }"></view>
+              <text class="checkbox-label">All</text>
+            </view>
+            <view class="checkbox-item" v-for="h in pokemonStore.availableHabitats" :key="h.name"
+              @click="toggleHabitatFilter(h.name_zh)">
+              <view class="checkbox-box" :class="{ checked: pokemonStore.filterHabitat === h.name_zh }"></view>
+              <text class="checkbox-label">{{ h.name_en || h.name }}</text>
+            </view>
+          </view>
+          <view class="modal-spacer"></view>
+        </scroll-view>
+      </view>
     </view>
 
     <!-- Empty State -->
-    <view class="empty-state" v-if="!loading && pokedex.length === 0">
+    <view class="empty-state" v-if="!initialLoading && pokedex.length === 0">
       <view class="box-illustration">
         <image src="@/static/inset/empty.svg" mode="aspectFit" />
       </view>
@@ -58,14 +68,18 @@
     </view>
 
     <!-- List State -->
-    <scroll-view v-if="pokedex.length > 0 || loading" scroll-y class="scroll-area" @scrolltolower="loadMore">
-      <Loading :show="loading" :fullscreen="false" text="Syncing Pokedex..." />
+    <scroll-view v-if="pokedex.length > 0 || initialLoading" scroll-y class="scroll-area" 
+      @scrolltolower="loadMore">
+      <Loading :show="initialLoading" :fullscreen="false" text="Syncing Pokedex..." />
       
-      <view class="pokemon-grid" v-if="!loading">
+      <view class="pokemon-grid" v-if="!initialLoading">
         <view class="pokemon-card" v-for="item in pokedex" :key="item.id" @click="goToDetail(item)">
+          <view class="index-badge">
+            <text>#{{ item.pokemon_index }}</text>
+          </view>
           <image class="pokemon-img" :src="item.pokemon_image" mode="aspectFit" lazy-load />
           <text class="pokemon-nickname">{{ item.nickname || item.pokemon_name_zh }}</text>
-          <text class="pokemon-original">#{{ item.pokemon_index }} • {{ item.pokemon_name_en }}</text>
+          <text class="pokemon-original">{{ item.pokemon_name_en }}</text>
         </view>
       </view>
       <view class="load-more" v-if="loadingMore">
@@ -83,44 +97,52 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { onShow } from '@dcloudio/uni-app'
+import { ref, computed, nextTick } from 'vue'
+import { onShow, onHide } from '@dcloudio/uni-app'
 import CustomTabBar from '@/components/CustomTabBar.vue'
 import Loading from '@/components/Loading.vue'
-import TypeTag from '@/components/TypeTag.vue'
 import { getPlayerPokemon, getMetadata } from '@/api/pocket'
-import { useSearchStore } from '@/store/search'
+import { usePokemonStore } from '@/store/pokemon'
 
-const searchStore = useSearchStore()
+const pokemonStore = usePokemonStore()
 
 const statusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight || 20)
 const showFilters = ref(false)
 
 const pokedex = ref([])
-const loading = ref(false)
+const initialLoading = ref(false)
 const loadingMore = ref(false)
-const currentPage = ref(1)
-const hasMore = ref(true)
-const searchText = ref('')
+const currentPage = ref(pokemonStore.pokedexState.currentPage)
+const hasMore = ref(pokemonStore.pokedexState.hasMore)
+const searchText = ref(pokemonStore.pokedexState.searchText)
 let searchTimer = null
 
 const loadPokedex = async (page = 1) => {
-  if (page === 1) loading.value = true
-  loadingMore.value = true
+  if (loadingMore.value || initialLoading.value) return
+  
+  if (page === 1) initialLoading.value = true
+  else loadingMore.value = true
+  
   try {
-    const res = await getPlayerPokemon(page, searchText.value, searchStore.filterType, searchStore.filterHabitat)
+    const res = await getPlayerPokemon(page, searchText.value, pokemonStore.filterType, pokemonStore.filterHabitat)
     // DRF paginated: { count, next, previous, results }
-    if (page === 1) {
-      pokedex.value = res.results || res
-    } else {
-      pokedex.value = [...pokedex.value, ...(res.results || res)]
-    }
+    const results = res.results || res
+    pokedex.value = page === 1 ? results : [...pokedex.value, ...results]
+    
     hasMore.value = !!res.next
     currentPage.value = page
+    
+    // Update store state
+    pokemonStore.setCachedPokedex(pokedex.value)
+    pokemonStore.updatePokedexState({
+      currentPage: page,
+      hasMore: hasMore.value,
+      searchText: searchText.value
+    })
   } catch (err) {
     console.error(err)
   } finally {
-    loading.value = false
+    initialLoading.value = false
     loadingMore.value = false
   }
 }
@@ -135,32 +157,40 @@ const onSearch = () => {
   searchTimer = setTimeout(() => {
     currentPage.value = 1
     hasMore.value = true
+    pokemonStore.updatePokedexState({ searchText: searchText.value })
     loadPokedex(1)
   }, 500)
 }
 
 const toggleTypeFilter = (name) => {
-  searchStore.setFilterType(name)
+  pokemonStore.setFilterType(name)
   currentPage.value = 1
   loadPokedex(1)
 }
 
 const toggleHabitatFilter = (name) => {
-  searchStore.setFilterHabitat(name)
+  pokemonStore.setFilterHabitat(name)
   currentPage.value = 1
   loadPokedex(1)
 }
 
 onShow(async () => {
-  if (searchStore.availableTypes.length === 0) {
+  // Load metadata if missing
+  if (pokemonStore.availableTypes.length === 0) {
     try {
       const meta = await getMetadata()
-      searchStore.setMetadata(meta.types, meta.habitats)
+      pokemonStore.setMetadata(meta.types, meta.habitats)
     } catch (err) {}
   }
-  currentPage.value = 1
-  hasMore.value = true
-  loadPokedex(1)
+  
+  // Use cache if available
+  if (pokemonStore.cachedPokedex.length > 0) {
+    pokedex.value = pokemonStore.cachedPokedex
+  } else {
+    currentPage.value = 1
+    hasMore.value = true
+    loadPokedex(1)
+  }
 })
 
 const goToDetail = (item) => {
@@ -205,18 +235,31 @@ const goToDetail = (item) => {
 .search-inner {
   display: flex;
   align-items: center;
-  background-color: rgba(255, 255, 255, 0.8);
-  border-radius: 15px;
-  padding: 6px 15px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  background-color: $color-white;
+  border-radius: 16px;
+  padding: 10px 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  border: 1px solid #ECEEF5;
+}
+
+.search-icon-svg {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  opacity: 0.4;
 }
 
 .filter-toggle {
-  padding: 4px 8px;
+  width: 36px;
+  height: 36px;
   margin-left: 10px;
-  border-radius: 8px;
-  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  background-color: $color-bg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s;
+  flex-shrink: 0;
 
   &.active {
     background-color: $color-primary;
@@ -225,15 +268,8 @@ const goToDetail = (item) => {
 }
 
 .toggle-icon {
-  font-size: 11px;
-  font-weight: bold;
-  color: $color-text-secondary;
-  text-transform: uppercase;
-}
-
-.search-icon {
-  margin-right: 10px;
   font-size: 16px;
+  color: $color-text-secondary;
 }
 
 .search-input {
@@ -312,6 +348,20 @@ const goToDetail = (item) => {
   align-items: center;
   box-sizing: border-box;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+  position: relative;
+}
+
+.index-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+
+  text {
+    font-size: 11px;
+    font-weight: bold;
+    color: $color-text-light;
+  }
 }
 
 .pokemon-img {
@@ -333,42 +383,96 @@ const goToDetail = (item) => {
   color: $color-text-secondary;
 }
 
-.filter-section {
-  padding: 0 20px;
-  margin-bottom: 10px;
-}
-
-.filter-scroll {
-  white-space: nowrap;
-}
-
-.chip-group {
+/* Modal Overlay */
+.filter-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  justify-content: flex-start; /* Slide from top */
 }
 
-.filter-chip {
-  padding: 4px 12px;
-  background-color: white;
-  border-radius: 8px;
-  font-size: 12px;
-  color: $color-text-secondary;
-  border: 1px solid transparent;
-  transition: all 0.2s;
+.filter-modal-content {
+  background-color: $color-primary; /* Yellow Modal Background */
+  border-bottom-left-radius: 30px;
+  border-bottom-right-radius: 30px;
+  padding: 40px 25px 30px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideDown 0.3s ease-out;
+}
 
-  &.active {
-    background-color: $color-primary;
-    color: white;
-    font-weight: bold;
-    box-shadow: 0 4px 8px rgba($color-primary, 0.2);
-  }
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
 
-  &.habitat {
-    &.active {
-      background-color: $color-secondary;
-      box-shadow: 0 4px 10px rgba($color-secondary, 0.2);
-    }
-  }
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.modal-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: $color-text-primary;
+}
+
+.modal-close {
+  font-size: 24px;
+  font-weight: 900;
+  color: $color-text-primary;
+}
+
+.modal-body {
+  flex: 1;
+  height: 0;
+}
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px 10px;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  &:active { opacity: 0.7; }
+}
+
+.checkbox-box {
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid $color-text-primary;
+  border-radius: 3px;
+  box-sizing: border-box;
+}
+
+.checkbox-box.checked {
+  background-color: $color-danger; /* Red checkbox active */
+  border-color: $color-danger;
+}
+
+.checkbox-label {
+  font-size: 15px;
+  color: $color-text-primary;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.modal-spacer {
+  height: 100px;
 }
 
 .load-more {

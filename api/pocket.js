@@ -43,7 +43,7 @@ export const getPlayerPokemon = (page = 1, search = '', type = '', habitat = '')
   return request({ url: `/user-pokemon/?page=${page}&search=${search}&type=${type}&habitat=${habitat}` })
 }
 
-export const encounterPokemon = () => {
+export const explorePokemon = () => {
   return request({ url: '/catch/' })
 }
 
@@ -57,6 +57,10 @@ export const getAllPokemon = (page = 1, search = '', type = '', habitat = '') =>
 
 export const getPokemonDetail = (id) => {
   return request({ url: `/pokemon/${id}/` })
+}
+
+export const getGameRandomPokemon = () => {
+  return request({ url: '/pokemon/game_random/' })
 }
 
 export const updatePlayerPokemon = (id, data) => {

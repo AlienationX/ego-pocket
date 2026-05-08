@@ -19,12 +19,44 @@
 			}
 		},
 		{
+			"path": "pages/explore/index",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/game/index",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},
+		{
 			"path": "pages/detail/index",
 			"style": {
 				"navigationStyle": "custom"
 			}
 		}
 	],
+	"tabBar": {
+		"custom": true,
+		"list": [
+			{
+				"pagePath": "pages/home/index"
+			},
+			{
+				"pagePath": "pages/pokedex/index"
+			},
+			{
+				"pagePath": "pages/explore/index"
+			},
+			{
+				"pagePath": "pages/game/index"
+			},
+			{
+				"pagePath": "pages/profile/index"
+			}
+		]
+	},
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "Ego Pocket",

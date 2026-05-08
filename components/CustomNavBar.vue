@@ -2,7 +2,7 @@
   <view class="custom-nav-bar" :style="{ paddingTop: statusBarHeight + 'px' }">
     <view class="nav-content">
       <view class="back-btn" v-if="showBack" @click="goBack">
-        <image class="back-icon" src="/static/icons/arrow-left.svg" mode="aspectFit" />
+        <CustomIcon name="arrow-left" :size="24" color="#333" />
       </view>
       <text class="title">{{ title }}</text>
     </view>
@@ -11,6 +11,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import CustomIcon from './CustomIcon.vue'
 
 const props = defineProps({
   title: {
